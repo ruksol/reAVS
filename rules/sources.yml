@@ -1,0 +1,46 @@
+sources:
+  - id: INTENT_OBJECT
+    category: intent
+    methods: ["Activity;->getIntent", "Service;->onStartCommand", "BroadcastReceiver;->onReceive"]
+    description: IPC entrypoints producing attacker-controlled Intent
+
+  - id: INTENT_EXTRA_STRINGS
+    category: intent
+    methods:
+      ["Intent;->getStringExtra", "Intent;->getCharSequenceExtra", "Intent;->getIntExtra",
+       "Intent;->getLongExtra", "Intent;->getBooleanExtra", "Intent;->getFloatExtra",
+       "Intent;->getDoubleExtra", "Intent;->getByteExtra", "Intent;->getShortExtra",
+       "Intent;->getStringArrayExtra", "Intent;->getIntArrayExtra", "Intent;->getLongArrayExtra",
+       "Intent;->getBooleanArrayExtra", "Intent;->getStringArrayListExtra", "Intent;->getExtras",
+       "Intent;->getAction", "Intent;->getType", "Intent;->getCategories"]
+    description: Intent-derived strings and routing fields
+
+  - id: INTENT_EXTRA_PARCELABLE
+    category: intent
+    methods:
+      ["Intent;->getParcelableExtra", "Intent;->getParcelableArrayExtra", "Intent;->getParcelableArrayListExtra",
+       "Intent;->getSerializableExtra", "Intent;->getBundleExtra"]
+    description: Parcelable/Serializable extras from IPC
+
+  - id: BUNDLE_EXTRA
+    category: intent
+    methods: ["Bundle;->getString", "Bundle;->getParcelable", "Bundle;->getSerializable"]
+    description: Bundle-derived values (often from getExtras)
+
+  - id: URI_DERIVED
+    category: uri
+    methods:
+      ["Uri;->getPath", "Uri;->getEncodedPath", "Uri;->getLastPathSegment",
+       "Uri;->getQueryParameter", "Uri;->getQuery", "Uri;->getEncodedQuery",
+       "Uri;->getScheme", "Uri;->getHost", "Uri;->getAuthority", "Uri;->toString"]
+    description: Uri-derived path/query strings
+
+  - id: INTENT_URI
+    category: uri
+    methods: ["Intent;->getData", "Intent;->getDataString"]
+    description: Intent data values exposed as Uri strings
+
+  - id: PROVIDER_QUERY_INPUT
+    category: provider
+    methods: ["ContentProvider;->query", "ContentProvider;->openFile", "ContentProvider;->openAssetFile"]
+    description: Provider entrypoints where parameters/Uri are attacker-influenced

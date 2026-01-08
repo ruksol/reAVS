@@ -1,0 +1,74 @@
+sinks:
+  - id: START_COMPONENT
+    category: intent
+    methods: ["startActivity", "startActivityForResult", "startService", "bindService", "sendBroadcast", "sendOrderedBroadcast"]
+    severity: HIGH
+    description: Component launching/IPC forwarding
+
+  - id: PENDING_INTENT
+    category: intent
+    methods: ["PendingIntent;->getActivity", "PendingIntent;->getService", "PendingIntent;->getBroadcast"]
+    severity: HIGH
+    description: PendingIntent creation (often abused with mutable/untrusted intents)
+
+  - id: SET_RESULT
+    category: intent
+    methods: ["setResult"]
+    severity: HIGH
+    description: setResult with attacker-controlled Intent/data
+
+  - id: FILE_READ
+    category: file
+    methods: ["FileInputStream", "Files;->readAllBytes", "ContentResolver;->openInputStream", "ParcelFileDescriptor;->open", "ContentProvider;->openFile", "ContentProvider;->openAssetFile"]
+    severity: HIGH
+    description: File read sinks
+
+  - id: FILE_WRITE
+    category: file
+    methods: ["FileOutputStream", "FileWriter", "openFileOutput", "Files;->write", "ContentResolver;->openOutputStream", "ParcelFileDescriptor;->open"]
+    severity: HIGH
+    description: File write sinks
+
+  - id: WEBVIEW_LOAD
+    category: webview
+    methods: ["WebView;->loadUrl", "WebView;->loadData", "WebView;->loadDataWithBaseURL", "WebView;->postUrl"]
+    severity: HIGH
+    description: WebView loads attacker-controlled content
+
+  - id: WEBVIEW_JS_BRIDGE
+    category: webview
+    methods: ["WebView;->addJavascriptInterface"]
+    severity: CRITICAL
+    description: JavaScript bridge exposure
+
+  - id: SQL_EXEC
+    category: sql
+    methods:
+      ["SQLiteDatabase;->rawQuery", "SQLiteDatabase;->execSQL", "SQLiteDatabase;->query",
+       "SQLiteQueryBuilder;->query", "SQLiteStatement;->execute", "SQLiteStatement;->executeUpdateDelete"]
+    severity: HIGH
+    description: SQL execution
+
+  - id: DYNAMIC_CODE_LOADING
+    category: exec
+    methods: ["DexClassLoader;-><init>", "PathClassLoader;-><init>"]
+    severity: CRITICAL
+    description: Dynamic code loading (DexClassLoader/PathClassLoader)
+
+  - id: NATIVE_CODE_LOADING
+    category: exec
+    methods: ["System;->load", "System;->loadLibrary"]
+    severity: CRITICAL
+    description: Native code loading
+
+  - id: CODE_EXECUTION
+    category: exec
+    methods: ["Runtime;->exec", "ProcessBuilder;-><init>", "ProcessBuilder;->start"]
+    severity: CRITICAL
+    description: Runtime command execution
+
+  - id: REFLECTION_INVOKE
+    category: exec
+    methods: ["Class;->forName", "ClassLoader;->loadClass", "Class;->getMethod", "Method;->invoke"]
+    severity: HIGH
+    description: Reflection-based dynamic invocation

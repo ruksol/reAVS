@@ -1,0 +1,40 @@
+sanitizers:
+  - id: CANONICALIZE_PATH
+    category: uri
+    patterns: ["getCanonicalPath", "toRealPath", "Paths;->get", "File;->getCanonicalFile", "normalize"]
+    description: Canonicalization / real path resolution for file paths
+
+  - id: BASEDIR_ENFORCEMENT
+    category: uri
+    patterns: ["startsWith", "contains", "equals", "compareTo"]
+    description: Base-directory checks (must be combined with canonicalization to be strong)
+
+  - id: INTENT_COMPONENT_ALLOWLIST
+    category: intent
+    patterns: ["setPackage", "setClassName", "setComponent", "resolveActivity", "queryIntentActivities"]
+    description: Restricting forwarded intents to known components/packages
+
+  - id: URL_ALLOWLIST
+    category: web
+    patterns: ["Patterns;->WEB_URL", "Uri;->parse", "getHost", "endsWith", "equals"]
+    description: URL allowlisting / host validation
+
+  - id: SQL_PARAMETERIZATION
+    category: sql
+    patterns: ["selectionArgs", "?", "bindString", "bindLong", "compileStatement"]
+    description: Parameterized SQL usage
+
+  - id: CRYPTO_AEAD
+    category: crypto
+    patterns: ["AES/GCM", "ChaCha20-Poly1305"]
+    description: Authenticated encryption modes
+
+  - id: CRYPTO_SECURE_RANDOM
+    category: crypto
+    patterns: ["SecureRandom;->nextBytes", "generateSeed"]
+    description: Random IV/salt generation
+
+  - id: ANDROID_KEYSTORE
+    category: crypto
+    patterns: ["AndroidKeyStore", "KeyGenParameterSpec", "KeyStore;->getInstance"]
+    description: Key material stored/derived via Android Keystore
