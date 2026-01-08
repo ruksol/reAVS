@@ -38,7 +38,6 @@ def _default_policy() -> Dict:
             "PENDING_INTENT_MUTABLE": "LOW",
             "PENDING_INTENT_MISSING_IMMUTABLE": "LOW",
             "HARDCODED_SECRET": "MEDIUM",
-            "HARDCODED_CRYPTO_IV": "MEDIUM",
             "AES_ECB_MODE": "MEDIUM",
         },
         "severity_basis_by_level": {
@@ -62,7 +61,6 @@ def _default_policy() -> Dict:
             "PENDING_INTENT_MUTABLE": "SIGNATURE",
             "PENDING_INTENT_MISSING_IMMUTABLE": "SIGNATURE",
             "HARDCODED_CRYPTO_KEY": "HEURISTIC",
-            "HARDCODED_CRYPTO_IV": "SIGNATURE",
             "AES_ECB_MODE": "SIGNATURE",
         },
         "cwe_by_id": {
@@ -84,7 +82,6 @@ def _default_policy() -> Dict:
         },
         "crypto_ids": {
             "HARDCODED_SECRET",
-            "HARDCODED_CRYPTO_IV",
             "AES_ECB_MODE",
         },
         "weak_digest_prefix": "WEAK_DIGEST_",

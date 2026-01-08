@@ -224,8 +224,8 @@ def _is_system_class(class_name: str) -> bool:
 
 def _finding_hardcoded_iv(class_name: str) -> Finding:
     return Finding(
-        id="HARDCODED_CRYPTO_IV",
-        title="Hardcoded cryptographic IV",
+        id="HARDCODED_SECRET",
+        title="Hardcoded cryptographic secret (IV)",
         description="Static constant used for IvParameterSpec suggests a hardcoded IV.",
         severity=Severity.HIGH,
         confidence=Confidence.HIGH,
@@ -371,8 +371,8 @@ def _detect_hardcoded_iv_in_extracted(class_name: str, method, extracted, iv_fie
         ]
         findings.append(
             Finding(
-                id="HARDCODED_CRYPTO_IV",
-                title="Hardcoded cryptographic IV",
+                id="HARDCODED_SECRET",
+                title="Hardcoded cryptographic secret (IV)",
                 description="Static IV used to construct IvParameterSpec.",
                 severity=Severity.HIGH,
                 confidence=Confidence.HIGH,

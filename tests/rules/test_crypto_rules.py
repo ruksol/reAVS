@@ -84,7 +84,7 @@ def test_hardcoded_crypto_iv_detection(make_ctx):
     use = FakeMethod(class_name, "encrypt", "()V", use_instructions, source=make_source(["Cipher;->init"]))
 
     findings = _run(CryptoSecretsScanner(), make_ctx, [clinit, use])
-    assert any(f.id == "HARDCODED_CRYPTO_IV" for f in findings)
+    assert any(f.id == "HARDCODED_SECRET" for f in findings)
 
 
 def test_hardcoded_crypto_iv_detection_without_cbc(make_ctx):
@@ -98,4 +98,4 @@ def test_hardcoded_crypto_iv_detection_without_cbc(make_ctx):
     method = FakeMethod("Lcom/test/CryptoUtil;", "initIv", "()V", instructions)
 
     findings = _run(CryptoSecretsScanner(), make_ctx, [method])
-    assert any(f.id == "HARDCODED_CRYPTO_IV" for f in findings)
+    assert any(f.id == "HARDCODED_SECRET" for f in findings)
