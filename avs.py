@@ -367,6 +367,6 @@ def _normalize_findings_severity(findings, components, policy) -> None:
 
 
 if __name__ == "__main__":
-    androguard.util.set_log("ERROR")
+    androguard.util.set_log("CRITICAL")
 
     raise SystemExit(main(sys.argv[1:]))
