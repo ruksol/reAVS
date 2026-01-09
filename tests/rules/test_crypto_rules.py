@@ -23,7 +23,9 @@ def test_ecb_and_weak_digest_rules(make_ctx):
         ins_const_string("v0", "AES/ECB/PKCS5Padding"),
         ins_invoke("invoke-static", ["v0"], "Ljavax/crypto/Cipher;", "getInstance", "(Ljava/lang/String;)Ljavax/crypto/Cipher;"),
         ins_const_string("v1", "MD5"),
+        ins_invoke("invoke-static", ["v1"], "Ljava/security/MessageDigest;", "getInstance", "(Ljava/lang/String;)Ljava/security/MessageDigest;"),
         ins_const_string("v2", "SHA-1"),
+        ins_invoke("invoke-static", ["v2"], "Ljava/security/MessageDigest;", "getInstance", "(Ljava/lang/String;)Ljava/security/MessageDigest;"),
     ]
     method = FakeMethod("Lcom/test/CryptoUtil;", "encrypt", "()V", instructions)
     findings = _run(CryptoSecretsScanner(), make_ctx, [method])
