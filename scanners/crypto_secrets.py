@@ -48,6 +48,8 @@ class CryptoSecretsScanner(BaseScanner):
                 class_crypto_usage[class_name] = True
 
         for m, extracted, class_name in analyzed_methods:
+            if _is_system_class(class_name):
+                continue
             key_info = _detect_hardcoded_key(extracted)
             if key_info:
                 if key_info["confirmed"]:
@@ -55,8 +57,6 @@ class CryptoSecretsScanner(BaseScanner):
                     findings.append(finding)
                     ctx.logger.debug(f"finding emitted id={finding.id} method={_method_name(m)}")
                 else:
-                    if _is_system_class(class_name):
-                        continue
                     if not class_crypto_usage.get(class_name, False):
                         continue
                     candidate = _finding_hardcoded_key(m, key_info["key"], False)
@@ -76,12 +76,12 @@ class CryptoSecretsScanner(BaseScanner):
                 findings.append(finding)
                 ctx.logger.debug(f"finding emitted id={finding.id} method={_method_name(m)}")
 
-            if _has_weak_digest(extracted.const_strings, "MD5"):
+            if _has_weak_digest(extracted, "MD5"):
                 finding = _finding_weak_digest(m, "MD5")
                 findings.append(finding)
                 ctx.logger.debug(f"finding emitted id={finding.id} method={_method_name(m)}")
 
-            if _has_weak_digest(extracted.const_strings, "SHA-1"):
+            if _has_weak_digest(extracted, "SHA-1"):
                 finding = _finding_weak_digest(m, "SHA-1")
                 findings.append(finding)
                 ctx.logger.debug(f"finding emitted id={finding.id} method={_method_name(m)}")
@@ -90,6 +90,8 @@ class CryptoSecretsScanner(BaseScanner):
             findings.append(heuristic_finding)
 
         for class_name, has_iv in class_iv_usage.items():
+            if _is_system_class(class_name):
+                continue
             if has_iv:
                 iv_fields = class_iv_fields.get(class_name, set())
                 findings.extend(_detect_hardcoded_iv(class_name, methods, iv_fields))
@@ -146,8 +148,22 @@ def _has_ecb_mode(consts) -> bool:
     return any("/ECB/" in c.value for c in consts)
 
 
-def _has_weak_digest(consts, algo: str) -> bool:
-    return any(algo in c.value for c in consts)
+def _has_weak_digest(extracted, algo: str) -> bool:
+    const_map = {c.dest_reg: c.value for c in extracted.const_strings}
+    for mv in extracted.moves:
+        if mv.src_reg in const_map and mv.dest_reg is not None:
+            const_map[mv.dest_reg] = const_map[mv.src_reg]
+
+    for inv in extracted.invokes:
+        if inv.target_class == "Ljava/security/MessageDigest;" and inv.target_name == "getInstance":
+            if inv.arg_regs and inv.arg_regs[0] in const_map:
+                if _matches_digest_algo(const_map[inv.arg_regs[0]], algo):
+                    return True
+    return False
+
+
+def _matches_digest_algo(value: str, algo: str) -> bool:
+    return value.strip().upper() == algo.upper()
 
 
 def _finding_hardcoded_key(method, key_constant: str | None, confirmed: bool) -> Finding:
@@ -214,6 +230,7 @@ def _is_system_class(class_name: str) -> bool:
             "Lcom/google/android/",
             "Lcom/google/firebase/",
             "Lcom/google/common/",
+            "Lcom/google/crypto/",
             "Lkotlin/",
             "Ljava/",
             "Ljavax/",
