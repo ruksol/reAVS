@@ -1,7 +1,7 @@
 ﻿from __future__ import annotations
 
 from core.ir import Component
-from scanners.crypto_secrets import CryptoSecretsScanner
+from scanners.cryptography import CryptographyScanner
 from tests.helpers.fakes import (
     FakeMethod,
     ins_invoke,
@@ -28,7 +28,7 @@ def test_ecb_and_weak_digest_rules(make_ctx):
         ins_invoke("invoke-static", ["v2"], "Ljava/security/MessageDigest;", "getInstance", "(Ljava/lang/String;)Ljava/security/MessageDigest;"),
     ]
     method = FakeMethod("Lcom/test/CryptoUtil;", "encrypt", "()V", instructions)
-    findings = _run(CryptoSecretsScanner(), make_ctx, [method])
+    findings = _run(CryptographyScanner(), make_ctx, [method])
     ids = {f.id for f in findings}
     assert "AES_ECB_MODE" in ids
     assert "WEAK_DIGEST_MD5" in ids
@@ -53,7 +53,7 @@ def test_hardcoded_key_confirmed_and_heuristic(make_ctx):
     ]
     heuristic = FakeMethod("Lcom/test/CryptoUtil;", "heuristicKey", "()V", heuristic_instructions)
 
-    findings = _run(CryptoSecretsScanner(), make_ctx, [confirmed, heuristic])
+    findings = _run(CryptographyScanner(), make_ctx, [confirmed, heuristic])
     ids = [f.id for f in findings if f.id == "HARDCODED_SECRET"]
     assert len(ids) >= 1
 
@@ -85,7 +85,7 @@ def test_hardcoded_crypto_iv_detection(make_ctx):
     ]
     use = FakeMethod(class_name, "encrypt", "()V", use_instructions, source=make_source(["Cipher;->init"]))
 
-    findings = _run(CryptoSecretsScanner(), make_ctx, [clinit, use])
+    findings = _run(CryptographyScanner(), make_ctx, [clinit, use])
     assert any(f.id == "HARDCODED_SECRET" for f in findings)
 
 
@@ -99,5 +99,5 @@ def test_hardcoded_crypto_iv_detection_without_cbc(make_ctx):
     ]
     method = FakeMethod("Lcom/test/CryptoUtil;", "initIv", "()V", instructions)
 
-    findings = _run(CryptoSecretsScanner(), make_ctx, [method])
+    findings = _run(CryptographyScanner(), make_ctx, [method])
     assert any(f.id == "HARDCODED_SECRET" for f in findings)

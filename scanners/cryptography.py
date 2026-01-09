@@ -11,15 +11,15 @@ from core.dataflow.dex_queries import all_methods
 from scanners.base import BaseScanner
 
 
-class CryptoSecretsScanner(BaseScanner):
-    name = "crypto_secrets"
+class CryptographyScanner(BaseScanner):
+    name = "cryptography"
 
     def run(self, ctx: ScanContext) -> List[Finding]:
         findings: List[Finding] = []
         methods = all_methods(ctx.analysis)
         analyzed_methods = []
         class_iv_usage: Dict[str, bool] = {}
-        class_iv_fields: Dict[str, set] = {}
+        class_iv_fields: Dict[str, Dict[tuple, str | None]] = {}
         class_crypto_usage: Dict[str, bool] = {}
         total = 0
         analyzed = 0
@@ -93,7 +93,7 @@ class CryptoSecretsScanner(BaseScanner):
             if _is_system_class(class_name):
                 continue
             if has_iv:
-                iv_fields = class_iv_fields.get(class_name, set())
+                iv_fields = class_iv_fields.get(class_name, {})
                 findings.extend(_detect_hardcoded_iv(class_name, methods, iv_fields))
 
         ctx.metrics.setdefault("scanner_stats", {})[self.name] = {
@@ -300,12 +300,16 @@ def _method_name(method) -> str:
         return "<unknown>"
 
 
-def _extract_iv_fields_from_clinit(class_name: str, method, extracted) -> set:
-    const_regs = {c.dest_reg for c in extracted.const_strings if len(c.value) == 16}
-    iv_fields = set()
+def _extract_iv_fields_from_clinit(class_name: str, method, extracted) -> Dict[tuple, str | None]:
+    const_reg_values = {c.dest_reg: c.value for c in extracted.const_strings if len(c.value) == 16}
+    for mv in extracted.moves:
+        if mv.src_reg in const_reg_values and mv.dest_reg is not None:
+            const_reg_values[mv.dest_reg] = const_reg_values[mv.src_reg]
+    iv_fields: Dict[tuple, str | None] = {}
     for inv in extracted.invokes:
         if inv.target_class == "Ljava/lang/String;" and inv.target_name == "getBytes":
-            if inv.arg_regs and inv.arg_regs[0] in const_regs and inv.move_result_reg is not None:
+            if inv.arg_regs and inv.arg_regs[0] in const_reg_values and inv.move_result_reg is not None:
+                const_value = const_reg_values[inv.arg_regs[0]]
                 field_refs = extracted.field_refs or _bytecode_field_refs(method)
                 for ref in field_refs:
                     if not ref.opcode.startswith("sput"):
@@ -313,13 +317,13 @@ def _extract_iv_fields_from_clinit(class_name: str, method, extracted) -> set:
                     if ref.owner_class != class_name:
                         continue
                     if ref.src_reg == inv.move_result_reg:
-                        iv_fields.add((ref.owner_class, ref.field_name, ref.field_desc))
+                        iv_fields[(ref.owner_class, ref.field_name, ref.field_desc)] = const_value
     if not iv_fields:
         iv_fields = _extract_iv_fields_from_source(class_name, method)
     return iv_fields
 
 
-def _detect_hardcoded_iv(class_name: str, methods, iv_fields: set) -> List[Finding]:
+def _detect_hardcoded_iv(class_name: str, methods, iv_fields: Dict[tuple, str | None]) -> List[Finding]:
     findings: List[Finding] = []
     for m in methods:
         if _class_name(m) != class_name:
@@ -331,7 +335,7 @@ def _detect_hardcoded_iv(class_name: str, methods, iv_fields: set) -> List[Findi
     return findings
 
 
-def _detect_hardcoded_iv_in_extracted(class_name: str, method, extracted, iv_fields: set) -> List[Finding]:
+def _detect_hardcoded_iv_in_extracted(class_name: str, method, extracted, iv_fields: Dict[tuple, str | None]) -> List[Finding]:
     const_map = {c.dest_reg: c.value for c in extracted.const_strings}
     for mv in extracted.moves:
         if mv.src_reg in const_map and mv.dest_reg is not None:
@@ -344,12 +348,15 @@ def _detect_hardcoded_iv_in_extracted(class_name: str, method, extracted, iv_fie
         if not field_refs:
             field_refs = _source_field_refs(method)
     for ref in field_refs:
-        if ref.opcode.startswith("sget") and (ref.owner_class, ref.field_name, ref.field_desc) in iv_fields:
+        field_sig = (ref.owner_class, ref.field_name, ref.field_desc)
+        if ref.opcode.startswith("sget") and field_sig in iv_fields:
             if ref.dest_reg is not None:
-                iv_field_regs[ref.dest_reg] = ref
+                iv_field_regs[ref.dest_reg] = field_sig
 
     iv_spec_regs = set()
     iv_spec_note = None
+    iv_field_refs_used = set()
+    iv_literal_values = set()
     new_ivspec = {ni.dest_reg: ni for ni in extracted.new_instances if ni.class_desc == "Ljavax/crypto/spec/IvParameterSpec;"}
     bytes_from_const = {}
     for inv in extracted.invokes:
@@ -370,14 +377,20 @@ def _detect_hardcoded_iv_in_extracted(class_name: str, method, extracted, iv_fie
                 if this_reg in new_ivspec and (arg_reg in iv_field_regs or arg_reg in bytes_from_const):
                     iv_spec_regs.add(this_reg)
                     iv_spec_note = inv.raw
+                    if arg_reg in iv_field_regs:
+                        iv_field_refs_used.add(iv_field_regs[arg_reg])
+                    if arg_reg in bytes_from_const:
+                        iv_literal_values.add(bytes_from_const[arg_reg])
     findings: List[Finding] = []
     if iv_spec_regs:
+        source_notes = _format_iv_source_notes(iv_field_refs_used, iv_fields, iv_literal_values)
+        fingerprint_value = _iv_fingerprint_value(iv_field_refs_used, iv_fields, iv_literal_values)
         evidence = [
             EvidenceStep(
                 kind="SOURCE",
                 description="IV loaded from static constant or literal",
                 method=_method_name(method),
-                notes=",".join(sorted(f"{o}->{n}:{d}" for o, n, d in iv_fields)) if iv_fields else None,
+                notes=source_notes,
             ),
             EvidenceStep(
                 kind="SINK",
@@ -398,17 +411,19 @@ def _detect_hardcoded_iv_in_extracted(class_name: str, method, extracted, iv_fie
                 evidence=evidence,
                 recommendation="Use random IVs per encryption operation and store alongside ciphertext.",
                 references=[],
+                fingerprint=f"HARDCODED_SECRET|{class_name}|{fingerprint_value}",
             )
         )
     return findings
 
 
-def _extract_iv_fields_from_source(class_name: str, method) -> set:
-    iv_fields = set()
+def _extract_iv_fields_from_source(class_name: str, method) -> Dict[tuple, str | None]:
+    iv_fields: Dict[tuple, str | None] = {}
     lines = _source_lines(method)
     if not lines:
         return iv_fields
     const_reg = None
+    const_value = None
     saw_get_bytes = False
     bytes_reg = None
     for line in lines:
@@ -418,6 +433,7 @@ def _extract_iv_fields_from_source(class_name: str, method) -> set:
             reg, value = m_const
             if len(value) == 16:
                 const_reg = reg
+                const_value = value
                 continue
         if "Ljava/lang/String;->getBytes" in line and const_reg is not None:
             regs = _parse_reg_list(line)
@@ -434,9 +450,34 @@ def _extract_iv_fields_from_source(class_name: str, method) -> set:
             reg = _first_reg(line)
             owner, field, desc = _parse_field_sig(line)
             if reg == bytes_reg and owner == class_name and field and desc:
-                iv_fields.add((owner, field, desc))
+                iv_fields[(owner, field, desc)] = const_value
                 bytes_reg = None
     return iv_fields
+
+
+def _format_iv_source_notes(field_refs: set, field_values: Dict[tuple, str | None], literal_values: set) -> str | None:
+    parts = []
+    for owner, name, desc in sorted(field_refs):
+        value = field_values.get((owner, name, desc))
+        if value:
+            parts.append(f"{owner}->{name}:{desc}=\"{value}\"")
+        else:
+            parts.append(f"{owner}->{name}:{desc}")
+    for value in sorted(literal_values):
+        parts.append(f"literal=\"{value}\"")
+    return ", ".join(parts) if parts else None
+
+
+def _iv_fingerprint_value(field_refs: set, field_values: Dict[tuple, str | None], literal_values: set) -> str:
+    values = []
+    for ref in sorted(field_refs):
+        value = field_values.get(ref)
+        if value:
+            values.append(value)
+    values.extend(sorted(v for v in literal_values if v))
+    if values:
+        return values[0]
+    return ""
 
 
 def _source_field_refs(method) -> List:

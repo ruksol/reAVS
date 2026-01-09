@@ -25,7 +25,7 @@ from core.dataflow.taint_provider import LinearTaintProvider, CfgTaintProvider
 from scanners.intent_injection import IntentInjectionScanner
 from scanners.content_provider import ContentProviderScanner
 from scanners.code_execution import CodeExecutionScanner
-from scanners.crypto_secrets import CryptoSecretsScanner
+from scanners.cryptography import CryptographyScanner
 from scanners.deeplinks import DeepLinksScanner
 from scanners.webview import WebViewScanner
 
@@ -203,7 +203,7 @@ def main(argv: List[str]) -> int:
         IntentInjectionScanner(),
         ContentProviderScanner(),
         CodeExecutionScanner(),
-        CryptoSecretsScanner(),
+        CryptographyScanner(),
         DeepLinksScanner(),
         WebViewScanner(),
     ]

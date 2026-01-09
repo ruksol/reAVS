@@ -56,7 +56,7 @@ def test_cli_default_output(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(avs, "IntentInjectionScanner", lambda: DummyScanner(dummy_findings))
     monkeypatch.setattr(avs, "ContentProviderScanner", lambda: DummyScanner([]))
     monkeypatch.setattr(avs, "CodeExecutionScanner", lambda: DummyScanner([]))
-    monkeypatch.setattr(avs, "CryptoSecretsScanner", lambda: DummyScanner([]))
+    monkeypatch.setattr(avs, "CryptographyScanner", lambda: DummyScanner([]))
     monkeypatch.setattr(avs, "DeepLinksScanner", lambda: DummyScanner([]))
     monkeypatch.setattr(avs, "WebViewScanner", lambda: DummyScanner([]))
 
@@ -86,7 +86,7 @@ def test_cli_verbose_output_includes_debug(monkeypatch, capsys):
     monkeypatch.setattr(avs, "IntentInjectionScanner", lambda: DummyScanner(dummy_findings))
     monkeypatch.setattr(avs, "ContentProviderScanner", lambda: DummyScanner([]))
     monkeypatch.setattr(avs, "CodeExecutionScanner", lambda: DummyScanner([]))
-    monkeypatch.setattr(avs, "CryptoSecretsScanner", lambda: DummyScanner([]))
+    monkeypatch.setattr(avs, "CryptographyScanner", lambda: DummyScanner([]))
     monkeypatch.setattr(avs, "DeepLinksScanner", lambda: DummyScanner([]))
     monkeypatch.setattr(avs, "WebViewScanner", lambda: DummyScanner([]))
 
